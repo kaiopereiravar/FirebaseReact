@@ -131,7 +131,7 @@ export default function App() {
       })
       .catch((error) => {
         if (error === 'auth/weak-password') {
-          alert('Senha muito fraca!!!')
+          alert('Senha muito fraca!!')
         }
         else if (error === 'auth/email-already-in-use') {
           alert('Email já existente!!!')
