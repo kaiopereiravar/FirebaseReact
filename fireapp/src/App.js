@@ -9,7 +9,8 @@ import {
   getDoc,
   getDocs,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  onSnapshot
 } from 'firebase/firestore'
 
 export default function App() {
@@ -112,7 +113,23 @@ export default function App() {
   }
 
   useEffect(() => {
-    buscarPosts()
+    async function loadPosts() {
+      const unsub = onSnapshot(collection(db, "posts"), (snapshot) => { //onSnapshot fica monitorando meu banco de dados em caso de atualizacões em tempo real
+        let listaPost = []
+
+        snapshot.forEach((doc) => {
+          listaPost.push({
+            id: doc.id,
+            titulo: doc.data().titulo,
+            autor: doc.data().autor
+          })
+
+          setPosts(listaPost)
+        })
+      })
+    }
+
+    loadPosts()
   }, [])
 
   return (
