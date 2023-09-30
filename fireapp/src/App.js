@@ -1,7 +1,11 @@
 import './App.css';
 import { useState, useEffect } from 'react'
 import { db, auth } from './FirebaseConnection';
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,  //para criar email
+  signInWithEmailAndPassword, //para fazer login 
+  signOut //para deslogar
+} from 'firebase/auth'
 import {
   doc,
   setDoc,
@@ -21,6 +25,8 @@ export default function App() {
   const [idPost, setIdPost] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [user, setUser] = useState(false)
+  const [userDetail, setUserDetail] = useState({})
 
   // async function cadastrar() {
   //   await setDoc(doc(db, "users", "123"), {
@@ -124,13 +130,38 @@ export default function App() {
         setSenha('')
       })
       .catch((error) => {
-        if(error === 'auth/weak-password'){
+        if (error === 'auth/weak-password') {
           alert('Senha muito fraca!!!')
         }
-        else if(error === 'auth/email-already-in-use'){
+        else if (error === 'auth/email-already-in-use') {
           alert('Email já existente!!!')
         }
       })
+  }
+
+  async function logarUsuario() {
+    await signInWithEmailAndPassword(auth, email, senha)// para conseguir logar
+      .then((value) => {
+        alert('usuario logado com sucesso!!!')
+        console.log(value.user)
+        setEmail('')
+        setSenha('')
+
+        setUserDetail({
+          uid: value.user.id,
+          email: value.user.email,
+        })
+        setUser(true)
+      })
+      .catch((error) => {
+        alert(`erro ao fazer login!!!`)
+      })
+  }
+
+  async function fazerLogout() {
+    await signOut(auth)
+    setUser(false)
+    setUserDetail({})
   }
 
   useEffect(() => {
@@ -157,6 +188,15 @@ export default function App() {
     <div className="App">
       <h1>ReactJs + Firebase</h1>
 
+      {user && ( //se o user for "true"
+        <div>
+          <strong>Seja bem vindo(a) (Voce esta logado!)</strong> <br />
+          <span>ID: {userDetail.uid} - Email: {userDetail.email}</span> <br />
+          <button onClick={fazerLogout}>Sair da conta</button>
+          <br /> <br />
+        </div>
+      )}
+
       <div className='container'>
         <h2>AUTENTICACAO</h2>
 
@@ -166,7 +206,8 @@ export default function App() {
         <label>Senha</label>
         <input value={senha} onChange={(e) => { setSenha(e.target.value) }} placeholder='Digite aqui sua senha'></input> <br />
 
-        <button onClick={novoUsuario}>Cadastrar</button>
+        <button onClick={novoUsuario}>Cadastrar</button> <br />
+        <button onClick={logarUsuario}>Fazer login</button>
       </div>
 
       <br />
