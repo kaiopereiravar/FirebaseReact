@@ -1,12 +1,21 @@
 import './App.css';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { db } from './FirebaseConnection';
-import { doc, setDoc,collection, addDoc , getDoc, getDocs, updateDoc} from 'firebase/firestore'
+import {
+  doc,
+  setDoc,
+  collection,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc
+} from 'firebase/firestore'
 
 export default function App() {
   const [titulo, setTitulo] = useState('')
   const [autor, setAutor] = useState('')
-  const[posts,setPosts] = useState([])
+  const [posts, setPosts] = useState([])
   const [idPost, setIdPost] = useState('')
 
   // async function cadastrar() {
@@ -23,22 +32,22 @@ export default function App() {
   //   })
   // }
 
-  async function cadastrar(){
-    await addDoc(collection(db, 'posts'),{
+  async function cadastrar() {
+    await addDoc(collection(db, 'posts'), {
       titulo: titulo,
-      autor:autor,
+      autor: autor,
     })
-    .then(()=>{
-      console.log('bouaaa, voce é demaisss!!!')
-      setAutor('')
-      setTitulo('')
-    })
-    .catch((error)=>{
-      console.log('infelizmente não deu bom, MELHORE!!!' + error)
-    })
+      .then(() => {
+        console.log('bouaaa, voce é demaisss!!!')
+        setAutor('')
+        setTitulo('')
+      })
+      .catch((error) => {
+        console.log('infelizmente não deu bom, MELHORE!!!' + error)
+      })
   }
 
-  async function buscarPosts(){
+  async function buscarPosts() {
     // const postRef = doc(db,'posts','12345')
 
     // await getDoc(postRef)
@@ -53,42 +62,58 @@ export default function App() {
 
     const postsRef = collection(db, "posts")
     await getDocs(postsRef)
-    .then((snapshot) =>{
-      let lista = []
+      .then((snapshot) => {
+        let lista = []
 
-      snapshot.forEach((doc) => {
-        lista.push({
-          id: doc.id,
-          titulo: doc.data().titulo,
-          autor: doc.data().autor
+        snapshot.forEach((doc) => {
+          lista.push({
+            id: doc.id,
+            titulo: doc.data().titulo,
+            autor: doc.data().autor
+          })
         })
+
+        setPosts(lista)
+
       })
-
-      setPosts(lista)
-
-    })
-    .catch((error)=>{
-      console.log('deu algum erro ao buscar')
-    })
+      .catch((error) => {
+        console.log('deu algum erro ao buscar')
+      })
   }
 
-  async function editarPost(){
+  async function editarPost() {
     const docRef = doc(db, "posts", idPost) // aonde eu quero atualizar
     await updateDoc(docRef, {
       titulo: titulo,
       autor: autor
     })
 
-    .then(() =>{
-      console.log('post atualizado com sucesso!!')
-      setIdPost('')
-      setTitulo('')
-      setAutor('')
-    })
-    .catch((error) => {
-      console.log('ocorreu um erro ao atualizar o post' + error)
-    })
+      .then(() => {
+        console.log('post atualizado com sucesso!!')
+        setIdPost('')
+        setTitulo('')
+        setAutor('')
+      })
+      .catch((error) => {
+        console.log('ocorreu um erro ao atualizar o post' + error)
+      })
   }
+
+  async function excluirPost(id) {
+    const docRef = doc(db, "posts", id)
+
+    await deleteDoc(docRef)
+      .then(() => {
+        alert(`post deletado com sucesso`)
+      })
+      .catch(() => {
+        alert(`não foi possivel deletar o post`)
+      })
+  }
+
+  useEffect(() => {
+    buscarPosts()
+  }, [])
 
   return (
     <div className="App">
@@ -96,13 +121,13 @@ export default function App() {
 
       <div className='container'>
         <label>Id do Post:</label>
-        <input 
-        placeholder='digite o id do post' 
-        value={idPost} 
-        onChange={(e) => {
-          setIdPost(e.target.value)
-        }}>
-        </input> <br/>
+        <input
+          placeholder='digite o id do post'
+          value={idPost}
+          onChange={(e) => {
+            setIdPost(e.target.value)
+          }}>
+        </input> <br />
 
         <label>Titulo:</label>
         <textarea
@@ -119,20 +144,21 @@ export default function App() {
           value={autor}
           onChange={(e) => {
             setAutor(e.target.value)
-          }} 
-        ></input> <br/> <br/>
+          }}
+        ></input> <br /> <br />
 
-        <button onClick={cadastrar}>Cadastrar</button> <br/>
-        <button onClick={buscarPosts}>Buscar posts</button> <br/>
-        <button onClick={editarPost}>Atualizar post</button> <br/>
+        <button onClick={cadastrar}>Cadastrar</button> <br />
+        <button onClick={buscarPosts}>Buscar posts</button> <br />
+        <button onClick={editarPost}>Atualizar post</button> <br />
 
         <ul>
-          {posts.map((post)=>{
-            return(
+          {posts.map((post) => {
+            return (
               <li key={post.id}>
-                <span>ID: {post.id}</span> <br/>
-                <span>TItulo: {post.titulo}</span> <br/>
-                <span>Autor: {post.autor}</span> <br/> <br/>
+                <span>ID: {post.id}</span> <br />
+                <span>TItulo: {post.titulo}</span> <br />
+                <span>Autor: {post.autor}</span> <br />
+                <button onClick={() => excluirPost(post.id)}>Excluir</button><br /> <br />
               </li>
             )
           })}
